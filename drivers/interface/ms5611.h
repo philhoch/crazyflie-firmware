@@ -85,6 +85,6 @@ void ms5611Reset();
 void ms5611StartConversion(uint8_t command);
 int32_t ms5611GetConversion(uint8_t command);
 
-void ms5611GetData(float* pressure, float* temperature, float* asl);
+void ms5611GetData(float* pressure, float* temperature, float* asl, uint64_t* ts);
 float ms5611PressureToAltitude(float* pressure);
 #endif // MS5611_H

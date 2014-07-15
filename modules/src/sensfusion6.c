@@ -54,6 +54,8 @@ float q1 = 0.0f;
 float q2 = 0.0f;
 float q3 = 0.0f;  // quaternion of sensor frame relative to auxiliary frame
 
+static float yawActual = 0.0f;
+
 static bool isInit;
 
 // TODO: Make math util file
@@ -243,6 +245,7 @@ void sensfusion6GetEulerRPY(float* roll, float* pitch, float* yaw)
   *yaw = atan2(2*(q0*q3 + q1*q2), q0*q0 + q1*q1 - q2*q2 - q3*q3) * 180 / M_PI;
   *pitch = asin(gx) * 180 / M_PI; //Pitch seems to be inverted
   *roll = atan2(gy, gz) * 180 / M_PI;
+  yawActual = *yaw;
 }
 
 float sensfusion6GetAccZWithoutGravity(const float ax, const float ay, const float az)
@@ -271,6 +274,9 @@ float invSqrt(float x)
   return y;
 }
 
+void sensfusion6GetEulerY(float* yaw) {
+    *yaw = yawActual;
+}
 
 
 PARAM_GROUP_START(sensorfusion6)

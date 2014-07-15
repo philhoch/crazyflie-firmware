@@ -254,9 +254,10 @@ bool imu6Test(void)
 }
 
 
-void imu6Read(Axis3f* gyroOut, Axis3f* accOut)
+void imu6Read(Axis3f* gyroOut, Axis3f* accOut, uint64_t* ts)
 {
-  mpu6050GetMotion6(&accelMpu.x, &accelMpu.y, &accelMpu.z, &gyroMpu.x, &gyroMpu.y, &gyroMpu.z);
+  mpu6050GetMotion6(&accelMpu.x, &accelMpu.y, &accelMpu.z, &gyroMpu.x, &gyroMpu.y, &gyroMpu.z, ts);
+
 
   imuAddBiasValue(&gyroBias, &gyroMpu);
   if (!accelBias.isBiasValueFound)
@@ -305,9 +306,9 @@ void imu6Read(Axis3f* gyroOut, Axis3f* accOut)
   accOut->z = (accelLPFAligned.z - accelBias.bias.z) * IMU_G_PER_LSB_CFG;
 }
 
-void imu9Read(Axis3f* gyroOut, Axis3f* accOut, Axis3f* magOut)
+void imu9Read(Axis3f* gyroOut, Axis3f* accOut, Axis3f* magOut, uint64_t *ts)
 {
-  imu6Read(gyroOut, accOut);
+  imu6Read(gyroOut, accOut, ts);
 
   if (isHmc5883lPresent)
   {

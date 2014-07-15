@@ -42,6 +42,9 @@
 #include "ledseq.h"
 #include "param.h"
 #include "ms5611.h"
+#include "sensordata.h"
+#include "fliestate.h"
+#include "positioncontroller.h"
 
 #undef max
 #define max(a,b) ((a) > (b) ? (a) : (b))
@@ -149,6 +152,7 @@ void stabilizerInit(void)
   imu6Init();
   sensfusion6Init();
   controllerInit();
+  positionControllerInit();
 
   rollRateDesired = 0;
   pitchRateDesired = 0;
@@ -168,6 +172,7 @@ bool stabilizerTest(void)
   pass &= imu6Test();
   pass &= sensfusion6Test();
   pass &= controllerTest();
+  pass &= positionControllerTest();
 
   return pass;
 }
@@ -189,13 +194,20 @@ static void stabilizerTask(void* param)
   {
     vTaskDelayUntil(&lastWakeTime, F2T(IMU_UPDATE_FREQ)); // 500Hz
 
+    uint64_t ts;
+
     // Magnetometer not yet used more then for logging.
-    imu9Read(&gyro, &acc, &mag);
+    imu9Read(&gyro, &acc, &mag, &ts);
 
     if (imu6IsCalibrated())
     {
-      commanderGetRPY(&eulerRollDesired, &eulerPitchDesired, &eulerYawDesired);
-      commanderGetRPYType(&rollType, &pitchType, &yawType);
+        if(getControlState() == MANUAL) {
+            commanderGetRPY(&eulerRollDesired, &eulerPitchDesired, &eulerYawDesired);
+            commanderGetRPYType(&rollType, &pitchType, &yawType);
+        } else {
+            positionControllerGetRPY(&eulerRollDesired, &eulerPitchDesired, &eulerYawDesired);
+            positionControllerGetRPYType(&rollType, &pitchType, &yawType);
+        }
 
       // 250HZ
       if (++attitudeCounter >= ATTITUDE_UPDATE_RATE_DIVIDER)
@@ -211,12 +223,19 @@ static void stabilizerTask(void* param)
         controllerCorrectAttitudePID(eulerRollActual, eulerPitchActual, eulerYawActual,
                                      eulerRollDesired, eulerPitchDesired, -eulerYawDesired,
                                      &rollRateDesired, &pitchRateDesired, &yawRateDesired);
+
+        //
+        sendSensorData(&ts, &eulerRollActual, &eulerPitchActual, &eulerYawActual, &acc.x, &acc.y, &acc.z, &gyro.x, &gyro.y, &gyro.z);
+
         attitudeCounter = 0;
       }
 
       // 100HZ
       if (imuHasBarometer() && (++altHoldCounter >= ALTHOLD_UPDATE_RATE_DIVIDER))
       {
+
+
+
         stabilizerAltHoldUpdate();
         altHoldCounter = 0;
       }
@@ -243,7 +262,11 @@ static void stabilizerTask(void* param)
       if (!altHold || !imuHasBarometer())
       {
         // Use thrust from controller if not in altitude hold mode
-        commanderGetThrust(&actuatorThrust);
+          if(getControlState() == MANUAL) {
+              commanderGetThrust(&actuatorThrust);
+          } else {
+              positionControllerGetThrust(&actuatorThrust);
+          }
       }
       else
       {
@@ -277,9 +300,11 @@ static void stabilizerAltHoldUpdate(void)
   // Get altitude hold commands from pilot
   commanderGetAltHold(&altHold, &setAltHold, &altHoldChange);
 
+  uint64_t ts;
+
   // Get barometer height estimates
   //TODO do the smoothing within getData
-  ms5611GetData(&pressure, &temperature, &aslRaw);
+  ms5611GetData(&pressure, &temperature, &aslRaw, &ts);
   asl = asl * aslAlpha + aslRaw * (1 - aslAlpha);
   aslLong = aslLong * aslAlphaLong + aslRaw * (1 - aslAlphaLong);
 

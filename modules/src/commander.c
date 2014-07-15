@@ -42,6 +42,7 @@ struct CommanderCrtpValues
   float pitch;
   float yaw;
   uint16_t thrust;
+  bool joy;
 } __attribute__((packed));
 
 static struct CommanderCrtpValues targetVal[2];
@@ -162,6 +163,10 @@ void commanderGetThrust(uint16_t* thrust)
   }
 
   commanderWatchdog();
+}
+
+bool commanderIsJoy(void) {
+    return targetVal[side].joy;
 }
 
 // Params for flight modes

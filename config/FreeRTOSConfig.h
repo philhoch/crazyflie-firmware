@@ -72,7 +72,7 @@
 #define configCPU_CLOCK_HZ			( ( unsigned long ) 72000000 )
 #define configTICK_RATE_HZ			( ( portTickType ) 1000 )
 #define configMINIMAL_STACK_SIZE	( ( unsigned short ) 100 )
-#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 15000 ) )
+#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 14400 ) )
 #define configMAX_TASK_NAME_LEN		( 10 )
 #define configUSE_TRACE_FACILITY	0
 #define configUSE_16_BIT_TICKS		0
@@ -112,6 +112,17 @@ to exclude the API function. */
 #define M2T(X) ((unsigned int)(X*(configTICK_RATE_HZ/1000.0)))
 #define F2T(X) ((unsigned int)((configTICK_RATE_HZ/X)))
 
+#define traceTASK_SWITCHED_OUT() \
+	{ \
+	extern void taskSwitchedOut(signed char *pcTaskName); \
+	taskSwitchedOut(&pxCurrentTCB->pcTaskName[0]); \
+	}
+#define traceTASK_SWITCHED_IN() \
+	{ \
+	extern void taskSwitchedIn(signed char *pcTaskName); \
+	taskSwitchedIn(&pxCurrentTCB->pcTaskName[0]); \
+	}
+
 // DEBUG SECTION
 #define configUSE_APPLICATION_TASK_TAG  1
 #define configQUEUE_REGISTRY_SIZE       10
@@ -122,10 +133,6 @@ to exclude the API function. */
 #define TASK_ADC_ID_NBR         4
 #define TASK_PM_ID_NBR          5
 
-#define traceTASK_SWITCHED_IN() \
-  { \
-    extern void debugSendTraceInfo(unsigned int taskNbr); \
-    debugSendTraceInfo((int)pxCurrentTCB->pxTaskTag); \
-  }
+
 
 #endif /* FREERTOS_CONFIG_H */

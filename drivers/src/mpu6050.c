@@ -40,6 +40,8 @@
 
 #include "mpu6050.h"
 
+#include "usec_time.h"
+
 static uint8_t devAddr;
 static I2C_TypeDef *I2Cx;
 static uint8_t buffer[14];
@@ -100,10 +102,12 @@ bool mpu6050SelfTest()
   aRange = mpu6050GetFullScaleAccelGPL();
   gRange = mpu6050GetFullScaleGyroDPL();
 
+  uint64_t ts;
+
   // First values after startup can be read as zero. Scrap a couple to be sure.
   for (scrap = 0; scrap < 20; scrap++)
   {
-    mpu6050GetMotion6(&axi16, &ayi16, &azi16, &gxi16, &gyi16, &gzi16);
+    mpu6050GetMotion6(&axi16, &ayi16, &azi16, &gxi16, &gyi16, &gzi16, &ts);
     vTaskDelay(M2T(2));
   }
   // First measurement
@@ -125,7 +129,7 @@ bool mpu6050SelfTest()
   // Wait for self test to take effect
   vTaskDelay(M2T(MPU6050_SELF_TEST_DELAY_MS));
   // Take second measurement
-  mpu6050GetMotion6(&axi16, &ayi16, &azi16, &gxi16, &gyi16, &gzi16);
+  mpu6050GetMotion6(&axi16, &ayi16, &azi16, &gxi16, &gyi16, &gzi16, &ts);
   gxfTst = gxi16 * gRange;
   gyfTst = gyi16 * gRange;
   gzfTst = gzi16 * gRange;
@@ -2082,9 +2086,9 @@ bool mpu6050GetIntDataReadyStatus()
  * @see MPU6050_RA_ACCEL_XOUT_H
  */
 void mpu6050GetMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz,
-    int16_t* mx, int16_t* my, int16_t* mz)
+    int16_t* mx, int16_t* my, int16_t* mz, uint64_t* ts)
 {
-  mpu6050GetMotion6(ax, ay, az, gx, gy, gz);
+  mpu6050GetMotion6(ax, ay, az, gx, gy, gz, ts);
   // TODO: magnetometer integration
 }
 /** Get raw 6-axis motion sensor readings (accel/gyro).
@@ -2099,9 +2103,12 @@ void mpu6050GetMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16
  * @see getRotation()
  * @see MPU6050_RA_ACCEL_XOUT_H
  */
-void mpu6050GetMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz)
+void mpu6050GetMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz, uint64_t* ts)
 {
   i2cdevRead(I2Cx, devAddr, MPU6050_RA_ACCEL_XOUT_H, 14, buffer);
+  // add timestamp to align data on basestation side (should be sufficient here)
+  *ts = usecTimestamp();
+
   *ax = (((int16_t) buffer[0]) << 8) | buffer[1];
   *ay = (((int16_t) buffer[2]) << 8) | buffer[3];
   *az = (((int16_t) buffer[4]) << 8) | buffer[5];

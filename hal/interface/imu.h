@@ -53,8 +53,8 @@
 
 void imu6Init(void);
 bool imu6Test(void);
-void imu6Read(Axis3f* gyro, Axis3f* acc);
-void imu9Read(Axis3f* gyroOut, Axis3f* accOut, Axis3f* magOut);
+void imu6Read(Axis3f* gyro, Axis3f* acc, uint64_t* ts); // timestamp added
+void imu9Read(Axis3f* gyroOut, Axis3f* accOut, Axis3f* magOut, uint64_t* ts); // timestamp added
 bool imu6IsCalibrated(void);
 bool imuHasBarometer(void);
 bool imuHasMangnetometer(void);

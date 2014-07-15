@@ -39,6 +39,8 @@
 
 #include "math.h"
 
+#include "usec_time.h"
+
 #define EXTRA_PRECISION      5 // trick to add more precision to the pressure and temp readings
 #define CONVERSION_TIME_MS   10 // conversion time in milliseconds. 10 is minimum
 #define PRESSURE_PER_TEMP 5 // Length of reading cycle: 1x temp, rest pressure. Good values: 1-10
@@ -334,9 +336,11 @@ void ms5611Reset()
  * Best called at 100hz. For every PRESSURE_PER_TEMP-1 pressure readings temp is read once.
  * Effective 50-90hz baro update and 50-10hz temperature update if called at 100hz.
  */
-void ms5611GetData(float* pressure, float* temperature, float* asl)
+void ms5611GetData(float* pressure, float* temperature, float* asl, uint64_t *ts)
 {
     int32_t tempPressureRaw, tempTemperatureRaw;
+
+    *ts = usecTimestamp();
 
     // Dont reader faster than we can
     uint32_t now = xTaskGetTickCount();

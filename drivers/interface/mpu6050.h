@@ -607,8 +607,8 @@ bool mpu6050GetIntI2CMasterStatus();
 bool mpu6050GetIntDataReadyStatus();
 
 // ACCEL_*OUT_* registers
-void mpu6050GetMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz);
-void mpu6050GetMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz);
+void mpu6050GetMotion9(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz, int16_t* mx, int16_t* my, int16_t* mz, uint64_t* ts); // timestamp added
+void mpu6050GetMotion6(int16_t* ax, int16_t* ay, int16_t* az, int16_t* gx, int16_t* gy, int16_t* gz, uint64_t* ts); // timestamp added
 void mpu6050GetAcceleration(int16_t* x, int16_t* y, int16_t* z);
 int16_t mpu6050GetAccelerationX();
 int16_t mpu6050GetAccelerationY();
